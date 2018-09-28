@@ -92,11 +92,11 @@ if __name__ == '__main__':
     for (f1, f2), subfig in zip(pairs, subfigs.reshape(-1)):
         # TODO Q2A
         # Affichez les données en utilisant f1 et f2 comme mesures
-        subfig.scatter(data.data[:, f1], data.data[:, f2],
-                       alpha=0.8, s=20)
-        subfig.set_xlabel(str(data.feature_names[f1]))
-        subfig.set_ylabel(str(data.feature_names[f2]))
-
+        subfig.scatter(data.data[:, f1], data.data[:, f2], alpha=0.8, s=20)
+        subfig.set_xlabel(str(data.feature_names[f1])[0:-5], fontsize=20)
+        subfig.set_ylabel(str(data.feature_names[f2])[0:-5], fontsize=20)
+        # Affichage en enlevant (cm) pour les noms et les écrire plus gros
+        # et modifiant la taille et la transparence des points
     _times.append(time.time())
     checkTime(TMAX_Q2A, "2A")
 
@@ -137,6 +137,10 @@ if __name__ == '__main__':
         # On crée une figure à  plusieurs sous-graphes
         fig, subfigs = pyplot.subplots(2, 2, sharex='all', sharey='all')
         _times.append(time.time())
+
+        # On crée un tableau du nombre de classes de couleurs
+        nb_class = len(set(data.target))
+        colors = "bgrcmykw"[:nb_class]
         for clf, subfig in zip(classifieurs, subfigs.reshape(-1)):
             # TODO Q2B
             # Entraînez le classifieur
@@ -145,32 +149,35 @@ if __name__ == '__main__':
             # Obtenez et affichez son erreur (1 - accuracy)
             # Stockez la valeur de cette erreur dans la variable err
             err = 1 - clf.score(sousData, data.target)
+            # Erreur sur le set d'entraienemnt car entrainé sur sousData
+            # soit une seule paire
             # TODO Q2B
             # Utilisez la grille que vous avez créée plus haut
             # pour afficher les régions de décision, de même
             # que les points colorés selon leur vraie classe
-            nb_class = len(set(data.target))
-            colors = "bgrcmykw"[:nb_class]
 
-            # PATCH POUR LES LEGENDES......
+            # PATCH POUR LES LEGENDES...... Je crée un point en bas a gauche de
+            # chaque graphe afin de pouvoir afficher la bonne légende de la
+            # bonne couleur car je n'ai qu'un seul scatter de data.
+            # J'aurais aussi pu faire 3 scatter différents mais cette méthode
+            # est bien plus rapide.
             scat = []
-            for color in set(colors):
+            for color in colors:
                 scat.append(subfig.scatter(data.data[:, f1].min(),
                                            data.data[:, f2].min(), alpha=1,
                                            c=color, s=20))
 
+            # On affiche les prédictions de la grille afin d'avoir les zones
+            # de couleurs.
             subfig.scatter(absc, ordon, alpha=0.05, s=20,
                            c=[colors[i] for i in clf.predict(
                                numpy.c_[absc.ravel(), ordon.ravel()])])
             subfig.scatter(data.data[:, f1], data.data[:, f2], alpha=1, s=20,
                            c=[colors[i] for i in clf.predict(sousData)])
-            # Identification des axes et des méthodes
-            subfig.set_xlabel(data.feature_names[f1])
-            subfig.set_ylabel(data.feature_names[f2])
-            subfig.set_title(clf.__class__.__name__ +
-                             " Err = " + str("%.2f" % round(err, 2)))
+            subfig.set_title(clf.__class__.__name__ + " Err = " +
+                             str("%.2f" % round(err, 2)), fontsize=20)
             fig.legend(tuple(scat), tuple(data.target_names),
-                       loc="lower center", ncol=5)
+                       loc="lower center", ncol=5, fontsize=20)
 
             if err > ERRMAX_Q2B:
                 print("[ATTENTION] Votre code pour la question 2B ne produit \
@@ -181,38 +188,46 @@ if __name__ == '__main__':
 
         _times.append(time.time())
         checkTime(TMAX_Q2B, "2B")
-        fig.suptitle(str(data.feature_names[f1])
+        fig.suptitle(str(data.feature_names[f1])[0:-5]
                      + " & " +
-                     str(data.feature_names[f2]), fontsize=16)
+                     str(data.feature_names[f2])[0:-5], fontsize=20)
 
         # On affiche les graphiques
         pyplot.show()
 
     # ########################################################################
-    # ############################  QUESTION 2 B #############################
+    # ############################  QUESTION 2 C #############################
     # ########################################################################
     # Question 2C
     # Note : Q2C (i) peut être répondue en utilisant le code précédent
+    ClassifierQc = QuadraticDiscriminantAnalysis()
+
+    avgError = 0.0
+    for i in range(10):
+        X, y = data.data, data.target
+        ClassifierQc.fit(X, y)
+        avgError += 1 - ClassifierQc.score(X, y)
+    avgError /= 10
+    print("Erreur : ", avgError)
 
     _times.append(time.time())
     # TODO Q2Cii
-    # à‰crivez ici le code permettant de partitionner les données en jeux
+    # écrivez ici le code permettant de partitionner les données en jeux
     # d'entraînement / de validation et de tester la performance du classifieur
     # mentionné dans l'énoncé
     # Vous devez répéter cette mesure 10 fois avec des partitions différentes
     # Stockez l'erreur moyenne sur ces 10 itérations dans une variable nommée
     # avgError
+
     avgError = 0.0
-    best_classifier = QuadraticDiscriminantAnalysis()
     for i in range(10):
-        for (f1, f2) in pairs:
-            X_train, X_test, y_train, y_test = train_test_split(
-                data.data, data.target,
-                test_size=0.5, train_size=0.5)
-            best_classifier.fit(X_train, y_train)
-            avgError += 1 - best_classifier.score(X_test, y_test)
-    avgError /= 60
-    print(avgError)
+        X_train, X_test, y_train, y_test = train_test_split(
+            data.data, data.target,
+            test_size=0.5, train_size=0.5)
+        ClassifierQc.fit(X_train, y_train)
+        avgError += 1 - ClassifierQc.score(X_test, y_test)
+    avgError /= 10
+    print("Erreur 50-50 : ", avgError)
     _times.append(time.time())
     checkTime(TMAX_Q2Cii, "2Cii")
     if avgError > ERRMAX_Q2Cii:
@@ -223,22 +238,21 @@ if __name__ == '__main__':
 
     _times.append(time.time())
     # TODO Q2Ciii
-    # à‰crivez ici le code permettant de déterminer la performance du
+    # écrivez ici le code permettant de déterminer la performance du
     # classifieur avec un K-fold avec k=3.
     # Vous devez répéter le K-folding 10 fois
     # Stockez l'erreur moyenne sur ces 10 itérations dans une variable nommée
     # avgError
-    avgError = 1.0
+    avgError = 0.0
     for i in range(10):
         rkf = RepeatedKFold(n_splits=3, n_repeats=1)
         for train_index, test_index in rkf.split(data.data):
-            print("TRAIN:", train_index, "TEST:", test_index)
             X_train, X_test = data.data[train_index], data.data[test_index]
             y_train, y_test = data.target[train_index], data.target[test_index]
-            best_classifier.fit(X_train, y_train)
-            avgError += 1 - best_classifier.score(X_test, y_test)
+            ClassifierQc.fit(X_train, y_train)
+            avgError += 1 - ClassifierQc.score(X_test, y_test)
     avgError /= 30
-    print(avgError)
+    print("Erreur K-Fold : ", avgError)
     _times.append(time.time())
     checkTime(TMAX_Q2Ciii, "2Ciii")
 
@@ -285,7 +299,7 @@ if __name__ == '__main__':
         X_train, X_test, y_train, y_test = train_test_split(X, y,
                                                             test_size=0.5,
                                                             train_size=0.5,
-                                                            random_state=42)
+                                                            random_state=666)
         clf.fit(X_train, y_train)
         # TODO Q2D
         # Obtenez et affichez son erreur (1 - accuracy)
@@ -299,7 +313,7 @@ if __name__ == '__main__':
         scat = []
         nb_class = len(set(y))
         colors = "bgrcmykw"[:nb_class]
-        for color in set(colors):
+        for color in colors:
             scat.append(subfig.scatter(X[:, 0].min(), X[:, 1].min(), alpha=1,
                                        c=color, s=20))
 
@@ -312,7 +326,7 @@ if __name__ == '__main__':
         subfig.set_xlabel("x")
         subfig.set_ylabel("y")
         subfig.set_title(clf.__class__.__name__ +
-                         " Err = " + str("%.2f" % round(err, 2)))
+                         " Err = " + str("%.2f" % round(err, 2)), fontsize=20)
         fig.legend(tuple(scat), tuple(set(y)),
                    loc="lower center", ncol=5)
     _times.append(time.time())
