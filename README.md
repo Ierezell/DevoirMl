@@ -1,9 +1,9 @@
 # Homework Machine Learning 1
-[Link to Latex Pdf](https://www.overleaf.com/read/gzfxnccnmxxz) 
+[Link to Latex Pdf](https://www.overleaf.com/read/gzfxnccnmxxz)
 
 To launch the **code :**
 
-Copy the repository : 
+Copy the repository :
 ```
 $ git clone https://github.com/Ierezell/DevoirMl
 ```

@@ -92,6 +92,7 @@ if __name__ == '__main__':
     for (f1, f2), subfig in zip(pairs, subfigs.reshape(-1)):
         # TODO Q2A
         # Affichez les données en utilisant f1 et f2 comme mesures
+        # [0:-5] enleève le "(cm)" des titres des axes
         subfig.scatter(data.data[:, f1], data.data[:, f2], alpha=0.8, s=20)
         subfig.set_xlabel(str(data.feature_names[f1])[0:-5], fontsize=20)
         subfig.set_ylabel(str(data.feature_names[f2])[0:-5], fontsize=20)
@@ -172,10 +173,14 @@ if __name__ == '__main__':
             subfig.scatter(absc, ordon, alpha=0.05, s=20,
                            c=[colors[i] for i in clf.predict(
                                numpy.c_[absc.ravel(), ordon.ravel()])])
+
+            # aussi les vrais points pour plus de clarté et critiquer les zones
             subfig.scatter(data.data[:, f1], data.data[:, f2], alpha=1, s=20,
                            c=[colors[i] for i in clf.predict(sousData)])
+
             subfig.set_title(clf.__class__.__name__ + " Err = " +
                              str("%.2f" % round(err, 2)), fontsize=20)
+
             fig.legend(tuple(scat), tuple(data.target_names),
                        loc="lower center", ncol=5, fontsize=20)
 
@@ -188,6 +193,7 @@ if __name__ == '__main__':
 
         _times.append(time.time())
         checkTime(TMAX_Q2B, "2B")
+
         fig.suptitle(str(data.feature_names[f1])[0:-5]
                      + " & " +
                      str(data.feature_names[f2])[0:-5], fontsize=20)
@@ -320,13 +326,16 @@ if __name__ == '__main__':
         subfig.scatter(absc, ordon, alpha=0.05, s=20,
                        c=[colors[i] for i in clf.predict(
                            numpy.c_[absc.ravel(), ordon.ravel()])])
+
         subfig.scatter(X[:, 0], X[:, 1], alpha=1, s=20,
                        c=[colors[i] for i in clf.predict(X)])
         # Identification des axes et des méthodes
         subfig.set_xlabel("x")
         subfig.set_ylabel("y")
+
         subfig.set_title(clf.__class__.__name__ +
                          " Err = " + str("%.2f" % round(err, 2)), fontsize=20)
+
         fig.legend(tuple(scat), tuple(set(y)),
                    loc="lower center", ncol=5)
     _times.append(time.time())

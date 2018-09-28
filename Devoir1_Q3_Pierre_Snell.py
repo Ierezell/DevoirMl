@@ -145,6 +145,7 @@ class ClassifieurAvecRejet:
         self.mi = [sommes[i] / self._counts_classes[i] for i in self._classes]
 
         # Calcul de la variance par classe
+        # On repète deux fois la même boucle, non-optimisé mais plus clair.
         sumvar = [0] * len(self._classes)
         for i in range(len(y)):
             sumvar[y[i]] += (X[i] - self.mi[y[i]])**2
@@ -190,8 +191,10 @@ class ClassifieurAvecRejet:
             log_Pci = numpy.log(self._Pci[i])
             logProb = cte - logVar - numpy.sum(Xnorm, axis=1) + log_Pci
             Proba.append(numpy.exp(logProb))
+        # On transpose pour avoir une normalisation facile (en ligne) et les
+        # résultats par classes sur la même ligne
         Proba = numpy.transpose(Proba)
-
+        # On normalise pour avoir une somme de probabilité = à 1
         return [Proba[i] / sum(Proba[i]) for i in range(len(Proba))]
 
     def predict(self, X):
@@ -323,7 +326,10 @@ if __name__ == "__main__":
             # ZONE DE REJET, de même que les points colorés selon
             # leur vraie classe
 
-            # PATCH POUR LES LEGENDES......
+            # PATCH POUR LES LEGENDES..... Je crée trois points en bas a gauche
+            # du graphique pour poouvoir afficher une belle légende générale.
+            # Je ne fais qu'un seul scatter donc impossible d'avoir 4 ronds de
+            # légende sans cela.
             colors = "bgrcmykw"[:len(clf._classes) + 1]
             scat = []
             for color in colors:
@@ -331,17 +337,25 @@ if __name__ == "__main__":
                                            data.data[:, f2].min(), alpha=1,
                                            c=color, s=20))
 
+            # On scatter selon les points sur la grille et la couleur est la
+            # valeur de leur prédiction
+            # ==> un seul scatter et non un par classse.
             subfig.scatter(absc, ordon, alpha=0.08, s=20,
                            c=[colors[i] for i in clf.predict(
                                numpy.c_[absc.ravel(), ordon.ravel()])])
+
+            # On scatter aussi les vrais points pour plus de clarté.
             subfig.scatter(data.data[:, f1], data.data[:, f2], alpha=1, s=20,
                            c=[colors[i] for i in clf.predict(sousData)])
-            # Identification des axes et des méthodes
+
+            # Identification des axes et des méthodes et coupe du "(cm)"
             subfig.set_xlabel(str(data.feature_names[f1])[0:-5])
             subfig.set_ylabel(str(data.feature_names[f2])[0:-5])
+
             subfig.set_title(clf.__class__.__name__ + " " + str(clf._lambda) +
                              " Err = " + str("%.2f" % round(err, 2)),
                              fontsize=20)
+
             fig.legend(tuple(scat),
                        tuple(data.target_names) + tuple(["Rejet"]),
                        loc="lower center", ncol=5, fontsize=20)
