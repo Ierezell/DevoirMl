@@ -267,7 +267,16 @@ class ClassifieurAvecRejet:
         # données rejetées si lambda < 1.0) pour les données passées en
         # argument.
         # Cette fonction peut supposer que fit() a préalablement été exécuté.
-        return sum(self.predict(X) == y) / len(y)
+        predictions = self.predict(X)
+        err = 0
+        for i in range(len(y)):
+            if predictions[i] == list(set(y))[-1]+1:
+                err += self._lambda
+                pass
+            elif predictions[i] != y[i]:
+                err += 1
+
+        return 1-(err/len(y))
 
 
 if __name__ == "__main__":

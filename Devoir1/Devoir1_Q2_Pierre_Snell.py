@@ -209,10 +209,9 @@ if __name__ == '__main__':
     ClassifierQc = QuadraticDiscriminantAnalysis()
 
     avgError = 0.0
-    for i in range(10):
-        X, y = data.data, data.target
-        ClassifierQc.fit(X, y)
-        avgError += 1 - ClassifierQc.score(X, y)
+    X, y = data.data, data.target
+    ClassifierQc.fit(X, y)
+    avgError += 1 - ClassifierQc.score(X, y)
     avgError /= 10
     print("Erreur : ", avgError)
 
