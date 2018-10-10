@@ -4,9 +4,9 @@
 # GIF-4101 / GIF-7005, Automne 2018
 # Devoir 2, Question 1
 #
-###############################################################################
-############################## INSTRUCTIONS ###################################
-###############################################################################
+# ############################################################################
+# ########################### INSTRUCTIONS ###################################
+# ############################################################################
 #
 # - Repérez les commentaires commençant par TODO : ils indiquent une tâche que
 #       vous devez effectuer.
@@ -37,9 +37,12 @@ _times = []
 def checkTime(maxduration, question):
     duration = _times[-1] - _times[-2]
     if duration > maxduration:
-        print("[ATTENTION] Votre code pour la question {0} met trop de temps à  s'exécuter! ".format(question) +
-              "Le temps maximum permis est de {0:.4f} secondes, mais votre code a requis {1:.4f} secondes! ".format(maxduration, duration) +
-              "Assurez-vous que vous ne faites pas d'appels bloquants (par exemple à  show()) dans cette boucle!")
+        print("[ATTENTION] Votre code pour la question {0} met trop de temps à\
+                s'exécuter! ".format(question) + "Le temps maximum permis est\
+                de {0:.4f} secondes, mais votre code a requis {1:.4f}\
+                secondes! ".format(maxduration, duration) + "Assurez-vous que\
+                vous ne faites pas d'appels bloquants (par exemple à  show())\
+                dans cette boucle!")
 
 
 # Définition des durées d'exécution maximales pour chaque sous-question
@@ -51,6 +54,22 @@ TMAX_Q1B = 2.5
 
 # Définition de la PDF de la densité-mélange
 def pdf(X):
+    """Returns the mixed density of the absice array X.
+
+    Parameters
+    ----------
+    X : array
+        Take a column array or a matrix
+
+    Returns
+    -------
+    Array
+        Return an array (1, len(X)) of the density of probability
+
+    Raises
+    -------
+    Array classic execptions
+    """
     return 0.4 * norm(0, 1).pdf(X[:, 0]) + 0.6 * norm(5, 1).pdf(X[:, 0])
 
 
@@ -60,20 +79,62 @@ def pdf(X):
 # Complétez la fonction sample(n), qui génère n
 # données suivant la distribution mentionnée dans l'énoncé
 def sample(n):
-    return
+    """Samples n values of the mixed density (cf : pdf function).
+
+    Parameters
+    ----------
+    n : int
+        number of samples
+
+    Returns
+    -------
+    Array of size 1, n
+        List of the n samples of the mixed density
+    """
+    densproba = numpy.array(pdf(numpy.linspace(-5, 10, 15000).reshape(-1, 1)))
+    densproba /= sum(densproba)
+    return numpy.random.choice(numpy.linspace(-5, 10, 15000),
+                               size=n,
+                               replace=True,
+                               p=densproba).reshape(-1, 1)
 
 
 if __name__ == '__main__':
     # Question 1A
-
     _times.append(time.time())
     # TODO Q1A
     # échantillonnez 50 et 10 000 données en utilisant la fonction
     # sample(n) que vous avez définie plus haut et tracez l'histogramme
     # de cette distribution échantillonée, en utilisant 25 bins,
     # dans le domaine [-5, 10].
-    # Sur les màªmes graphiques, tracez également la fonction de densité réelle.
+    # Sur les mêmes graphiques, tracez également la fonction de densité réelle.
+    n = [50, 10000]
+    absc50 = numpy.linspace(-5, 10, n[0])
+    absc10000 = numpy.linspace(-5, 10, n[1])
 
+    fig, (sfig1, sfig2) = pyplot.subplots(1, 2, sharex=True, sharey=True)
+
+    sfig1.hist(sample(n[0]), bins=25, histtype='stepfilled',
+               density=1, alpha=0.5)
+
+    sfig1.plot(absc50, pdf(absc50.reshape(n[0], 1)),
+               linewidth=2, alpha=0.5, color='r')
+
+    sfig1.set_xlabel('x', fontsize=10)
+    sfig1.set_ylabel('p(x)', fontsize=20)
+    sfig1.set_title("50 Échantillons")
+
+    sfig2.hist(sample(n[1]), bins=25, density=1,
+               histtype='stepfilled', alpha=0.5)
+
+    sfig2.plot(absc10000, pdf(absc10000.reshape(n[1], 1)),
+               linewidth=2, alpha=0.5, color='r')
+
+    sfig2.set_xlabel('x', fontsize=10)
+    sfig2.set_ylabel('p(x)', fontsize=10)
+    sfig2.set_title("10 000 Échantillons", fontsize=20)
+
+    fig.legend(['Density', 'Hist'], loc="lower center", ncol=4, fontsize=20)
     # Affichage du graphique
     _times.append(time.time())
     checkTime(TMAX_Q1A, "1A")
@@ -87,7 +148,47 @@ if __name__ == '__main__':
     # estimation avec noyau boxcar pour présenter les données. Pour chaque
     # nombre de données (50 et 10 000), vous devez présenter les distributions
     # estimées avec des tailles de noyau (bandwidth) de {0.3, 1, 2, 5}, dans
-    # la màªme figure, mais tracées avec des couleurs différentes.
+    # la même figure, mais tracées avec des couleurs différentes.
+    bandwidth = [0.3, 1, 2, 5]
+    kde50 = [0] * len(bandwidth)
+    kde10 = [0] * len(bandwidth)
+    kde_train_50 = [0] * len(bandwidth)
+    kde_train_10 = [0] * len(bandwidth)
+    fig, (sfig1, sfig2) = pyplot.subplots(1, 2, sharex=True, sharey=True)
+    # colors = 'bgrm'
+    # samples50 = sample(n[0]).reshape(-1, 1)
+    # samples10 = sample(n[1]).reshape(-1, 1)
+    for i in range(len(bandwidth)):
+        kde50[i] = KernelDensity(kernel='tophat',
+                                 bandwidth=bandwidth[i]).fit(sample(50))
+
+        kde_train_50[i] = numpy.exp(
+            kde50[i].score_samples(absc50.reshape(n[0], 1)))
+
+        kde10[i] = KernelDensity(kernel='tophat',
+                                 bandwidth=bandwidth[i]).fit(sample(10000))
+
+        kde_train_10[i] = numpy.exp(
+            kde10[i].score_samples(absc10000.reshape(n[1], 1)))
+
+        sfig1.plot(absc50, kde_train_50[i], alpha=0.8, lw=2)
+        sfig1.scatter(absc50, kde_train_50[i], alpha=0.5, lw=0.5)
+
+        sfig2.plot(absc10000, kde_train_10[i], alpha=0.8, lw=2)
+        sfig2.scatter(absc10000, kde_train_10[i], alpha=0.5, lw=0.5)
+
+    sfig1.fill(absc50, pdf(absc50.reshape(n[0], 1)),
+               linewidth=2, alpha=0.2, color='k')
+    sfig1.set_ylabel('p(x)', fontsize=20)
+    sfig1.set_title("50 Échantillons", fontsize=20)
+
+    sfig2.fill(absc10000, pdf(absc10000.reshape(n[1], 1)),
+               linewidth=2, alpha=0.2, color='k')
+    sfig2.set_ylabel('p(x)', fontsize=10)
+    sfig2.set_title("10 000 Échantillons", fontsize=20)
+
+    fig.legend(bandwidth + ['Truth'],
+               loc="lower center", ncol=5, fontsize=20)
 
     # Affichage du graphique
     _times.append(time.time())

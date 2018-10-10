@@ -87,7 +87,7 @@ if __name__ == '__main__':
     # Utilisons cette liste de paires pour afficher les données,
     # deux mesures à la fois
     # On crée une figure à  plusieurs sous-graphes
-    fig, subfigs = pyplot.subplots(2, 3)
+    fig, (sfig1, sfig2) = plt.subplots(1, 2, sharey=True)
     _times.append(time.time())
     for (f1, f2), subfig in zip(pairs, subfigs.reshape(-1)):
         # TODO Q2A
