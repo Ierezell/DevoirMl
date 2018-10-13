@@ -91,9 +91,9 @@ def sample(n):
     Array of size 1, n
         List of the n samples of the mixed density
     """
-    densproba = numpy.array(pdf(numpy.linspace(-5, 10, 15000).reshape(-1, 1)))
+    densproba = numpy.array(pdf(numpy.linspace(-5, 10, 1500).reshape(-1, 1)))
     densproba /= sum(densproba)
-    return numpy.random.choice(numpy.linspace(-5, 10, 15000),
+    return numpy.random.choice(numpy.linspace(-5, 10, 1500),
                                size=n,
                                replace=True,
                                p=densproba).reshape(-1, 1)
@@ -114,8 +114,8 @@ if __name__ == '__main__':
 
     fig, (sfig1, sfig2) = pyplot.subplots(1, 2, sharex=True, sharey=True)
 
-    sfig1.hist(sample(n[0]), bins=25, histtype='stepfilled',
-               density=1, alpha=0.5)
+    sfig1.hist(sample(n[0]), bins=25,
+               histtype='stepfilled', density=1, alpha=0.5)
 
     sfig1.plot(absc50, pdf(absc50.reshape(n[0], 1)),
                linewidth=2, alpha=0.5, color='r')
@@ -149,40 +149,31 @@ if __name__ == '__main__':
     # nombre de données (50 et 10 000), vous devez présenter les distributions
     # estimées avec des tailles de noyau (bandwidth) de {0.3, 1, 2, 5}, dans
     # la même figure, mais tracées avec des couleurs différentes.
-    bandwidth = [0.3, 1, 2, 5]
-    kde50 = [0] * len(bandwidth)
-    kde10 = [0] * len(bandwidth)
-    kde_train_50 = [0] * len(bandwidth)
-    kde_train_10 = [0] * len(bandwidth)
     fig, (sfig1, sfig2) = pyplot.subplots(1, 2, sharex=True, sharey=True)
-    # colors = 'bgrm'
-    # samples50 = sample(n[0]).reshape(-1, 1)
-    # samples10 = sample(n[1]).reshape(-1, 1)
-    for i in range(len(bandwidth)):
-        kde50[i] = KernelDensity(kernel='tophat',
-                                 bandwidth=bandwidth[i]).fit(sample(50))
+    bandwidth = [0.3, 1, 2, 5]
+    samples50 = sample(n[0]).reshape(-1, 1)
+    samples10 = sample(n[1]).reshape(-1, 1)
+    absc = numpy.linspace(-5, 10, 150)
+    kernels = map(lambda b: KernelDensity(kernel='tophat', bandwidth=b),
+                  bandwidth)
 
-        kde_train_50[i] = numpy.exp(
-            kde50[i].score_samples(absc50.reshape(n[0], 1)))
+    for k in kernels:
+        ker50 = numpy.exp(k.fit(samples50).score_samples(absc.reshape(-1, 1)))
 
-        kde10[i] = KernelDensity(kernel='tophat',
-                                 bandwidth=bandwidth[i]).fit(sample(10000))
+        sfig1.plot(absc, ker50, alpha=0.8, lw=2)
+        sfig1.scatter(absc, ker50, alpha=0.5, lw=0.5)
 
-        kde_train_10[i] = numpy.exp(
-            kde10[i].score_samples(absc10000.reshape(n[1], 1)))
+        ker10 = numpy.exp(k.fit(samples10).score_samples(absc.reshape(-1, 1)))
 
-        sfig1.plot(absc50, kde_train_50[i], alpha=0.8, lw=2)
-        sfig1.scatter(absc50, kde_train_50[i], alpha=0.5, lw=0.5)
+        sfig2.plot(absc, ker10, alpha=0.8, lw=2)
+        sfig2.scatter(absc, ker10, alpha=0.5, lw=0.5)
 
-        sfig2.plot(absc10000, kde_train_10[i], alpha=0.8, lw=2)
-        sfig2.scatter(absc10000, kde_train_10[i], alpha=0.5, lw=0.5)
-
-    sfig1.fill(absc50, pdf(absc50.reshape(n[0], 1)),
+    sfig1.fill(absc, pdf(absc.reshape(-1, 1)),
                linewidth=2, alpha=0.2, color='k')
     sfig1.set_ylabel('p(x)', fontsize=20)
     sfig1.set_title("50 Échantillons", fontsize=20)
 
-    sfig2.fill(absc10000, pdf(absc10000.reshape(n[1], 1)),
+    sfig2.fill(absc, pdf(absc.reshape(-1, 1)),
                linewidth=2, alpha=0.2, color='k')
     sfig2.set_ylabel('p(x)', fontsize=10)
     sfig2.set_title("10 000 Échantillons", fontsize=20)
