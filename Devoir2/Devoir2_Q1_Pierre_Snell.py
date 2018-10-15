@@ -120,9 +120,9 @@ if __name__ == '__main__':
     sfig1.plot(absc50, pdf(absc50.reshape(n[0], 1)),
                linewidth=2, alpha=0.5, color='r')
 
-    sfig1.set_xlabel('x', fontsize=10)
+    sfig1.set_xlabel('x', fontsize=20)
     sfig1.set_ylabel('p(x)', fontsize=20)
-    sfig1.set_title("50 Échantillons")
+    sfig1.set_title("50 Échantillons", fontsize=20)
 
     sfig2.hist(sample(n[1]), bins=25, density=1,
                histtype='stepfilled', alpha=0.5)
@@ -130,8 +130,8 @@ if __name__ == '__main__':
     sfig2.plot(absc10000, pdf(absc10000.reshape(n[1], 1)),
                linewidth=2, alpha=0.5, color='r')
 
-    sfig2.set_xlabel('x', fontsize=10)
-    sfig2.set_ylabel('p(x)', fontsize=10)
+    sfig2.set_xlabel('x', fontsize=20)
+    sfig2.set_ylabel('p(x)', fontsize=20)
     sfig2.set_title("10 000 Échantillons", fontsize=20)
 
     fig.legend(['Density', 'Hist'], loc="lower center", ncol=4, fontsize=20)
@@ -175,7 +175,7 @@ if __name__ == '__main__':
 
     sfig2.fill(absc, pdf(absc.reshape(-1, 1)),
                linewidth=2, alpha=0.2, color='k')
-    sfig2.set_ylabel('p(x)', fontsize=10)
+    sfig2.set_ylabel('p(x)', fontsize=20)
     sfig2.set_title("10 000 Échantillons", fontsize=20)
 
     fig.legend(bandwidth + ['Truth'],

@@ -66,7 +66,7 @@ TMAX_Q2Eiris = 15
 # Question 2B
 # Implémentation du discriminant linéaire
 class DiscriminantLineaire:
-    def __init__(self, eta=5e-2, epsilon=1e-3, max_iter=1000):
+    def __init__(self, eta=2e-2, epsilon=1e-6, max_iter=1000):
         # Cette fonction est déjà  codée pour vous, vous n'avez qu'à  utiliser
         # les variables membres qu'elle définit dans les autres fonctions de
         # cette classe.
@@ -84,6 +84,7 @@ class DiscriminantLineaire:
 
         # On initialise les poids aléatoirement
         w = np.random.rand(X.shape[1] + 1)
+        w = np.array(w)
         # Je prend w[0] = w0 et w[1:] tout le reste des poids
         # TODO Q2B
         # Vous devez ici implémenter l'entraînement.
@@ -94,41 +95,41 @@ class DiscriminantLineaire:
         # plus haut
         Err_prec = 1e10
         for i in range(self.max_iter):
-            # print("boucle : ", i)
-            num_mal_classe = []
             ind_mal_classe = []
-
+            deltawi = np.zeros(len(w) - 1)
+            deltaw0 = np.zeros(1)
+            w = w / np.linalg.norm(w)
             for j in range(len(y)):
-                hxjw = np.dot(w[1:], X[j]) + w[0]
-                Y = y[j] * hxjw
-                if Y <= 0:
-                    num_mal_classe.append(y[j] - hxjw)
+                hxw = np.dot(w[1:], X[j]) + w[0]
+                if (hxw * y[j]) <= 0:
                     ind_mal_classe.append(j)
-            ind_mal_classe = np.array(ind_mal_classe)
-            if ind_mal_classe.size:
-                normeX = np.linalg.norm(X[ind_mal_classe])**2
-                num = np.array(num_mal_classe)
-                Err = np.array(0.5 * sum(num**2 / normeX))
-                deltawi = self.eta * np.array(
-                    [np.dot(num / (normeX), X[ind_mal_classe][:, i])
-                     for i in range(X.shape[1])])
-                deltaw0 = self.eta * sum(num / normeX)
-            else:
-                Err = 0
-                deltawi = 0
-                deltaw0 = 0
+                    num = (y[j] - hxw) / np.linalg.norm(X[j])**2
+                    deltawi += num * X[j]
+                    deltaw0 += num
 
-            # condition d'arrêt :
-            # print("Err : ", Err)
-            # print()
-            if Err_prec - Err < self.epsilon:
-                print("Les poids ont convergés")
+            normeX = np.linalg.norm(X[ind_mal_classe])**2
+            numX = np.array(
+                [(y[i] - np.dot(w[1:], X[i]) + w[0]) / normeX
+                 for i in ind_mal_classe])
+
+            Err = 0.5 * sum(numX**2 / normeX)
+            w[0] += self.eta * deltaw0
+            w[1:] += self.eta * deltawi
+
+            # print(Err, Err_prec)
+
+            if (Err_prec - Err) < self.epsilon:
+                print("Les poids ont convergés en : ", i, " itérations")
                 break
             else:
                 Err_prec = Err
-            w[1:] += deltawi
-            w[0] += deltaw0
 
+            """
+            deltawi = self.eta * np.array(
+                [np.dot(num / (normeX), X[ind_mal_classe][:, i])
+                 for i in range(X.shape[1])])
+            deltaw0 = self.eta * sum(num / normeX)
+            """
             # à ce stade, la variable w devrait contenir les poids entraînés
             # On les copie dans une variable membre pour les conserver
         self.w = w
@@ -137,9 +138,13 @@ class DiscriminantLineaire:
         # TODO Q2B
         # Implémentez la fonction de prédiction
         # Vous pouvez supposer que fit() a préalablement été exécuté
-        return np.array(
-            [1 if np.dot(self.w[1:], x) + self.w[0] >= 0
+        return [np.sign(np.dot(self.w[1:], X[i]) + self.w[0]).astype(int)
+                for i in range(len(X))]
+
+        """
+        np.array([1 if np.dot(self.w[1:], x) + self.w[0] >= 0
              else 0 for x in X])
+        """
 
     def score(self, X, y):
         if set(y) == {0, 1}:
@@ -161,10 +166,11 @@ class DiscriminantLineaire:
 
 
 class ClassifieurUnContreTous:
-    def __init__(self, n_classes, **kwargs):
+    def __init__(self, n_classes, method='argmax', **kwargs):
         # Cette fonction est déjà  codée pour vous, vous n'avez qu'à  utiliser
         # les variables membres qu'elle définit dans les autres fonctions de
         # cette classe.
+        self.method = method
         self.n_classes = n_classes
         self.estimators = [DiscriminantLineaire(
             **kwargs) for c in range(n_classes)]
@@ -174,11 +180,10 @@ class ClassifieurUnContreTous:
         # Implémentez ici une approche un contre tous, oà¹ chaque classifieur
         # (contenu dans self.estimators) est entraîné à  distinguer une seule
         # classe versus toutes les autres
-
         for i in range(self.n_classes):
             target = y.copy()
-            target[np.where(target == i)] = 0
-            target[np.where(target != 0)] = 1
+            target[np.where(target == i)] = -1
+            target[np.where(target != -1)] = 1
             # target = (target*2)-1 pour mettre entre -1 et 1
             # mais déjà implémenté dans le fit de Disciminant linéraire
             self.estimators[i].fit(X, target)
@@ -187,28 +192,60 @@ class ClassifieurUnContreTous:
         # TODO Q2C
         # Implémentez ici la prédiction utilisant l'approche un contre tous
         # Vous pouvez supposer que fit() a préalablement été exécuté
-        classes = []
-        for x in X:
-            Hall = [np.dot(est.w[1:], x) + est.w[0] for est in self.estimators]
-            classes.append(np.argmax(Hall))
-        return classes
+
+        if self.method == 'argmax':
+            classes = []
+            for i in range(len(X)):
+                Hall = -np.array([np.dot(est.w[1:], X[i]) + est.w[0]
+                                 for est in self.estimators])
+
+                classes.append(np.argmax(Hall))
+            return classes
+
+        elif self.method == 'posval':
+            classes = []
+            for i in range(len(X)):
+                Hall = -np.array([np.dot(est.w[1:], X[i]) + est.w[0]
+                                 for est in self.estimators])
+                classes.append(np.argmax(Hall) if sum(Hall >= 0) == 1
+                               else self.n_classes + 1)
+            # pour faire le produit de tout les elements d'une liste
+            # reduce(lambda x, y: x*y, Hall)
+            # np.prod(np.array(Hall))
+            return classes
 
     def score(self, X, y):
         # TODO Q2C
         # Implémentez ici le calcul du score utilisant l'approche un contre
         # tous. Ce score correspond à  la précision (accuracy) moyenne.
         # Vous pouvez supposer que fit() a préalablement été exécuté
-        return sum([self.predict(X)[i] == y[i]
-                    for i in range(len(y))]) / len(y)
+
+        if self.method == "posval":
+            somme = 0
+            for i in range(len(X)):
+                pred = self.predict([X[i]])[0]
+                if 0 <= pred <= self.n_classes:
+                    somme += pred
+            return somme / len(y)
+
+        elif self.method == "argmax":
+            return sum([self.predict(X)[i] == y[i]
+                        for i in range(len(y))]) / len(y)
+
+        return somme / len(y)
 
 
 if __name__ == '__main__':
+    """
     # Question 2C
-
     _times.append(time.time())
     # Problème à  2 classes
     X, y = make_classification(n_features=2, n_redundant=0, n_informative=2,
                                n_clusters_per_class=1)
+    if set(y) == {0, 1}:
+        y = (y * 2) - 1
+    elif set(y) != {-1, 1}:
+        raise Exception("The target must be {0,1} or {-1,1}")
 
     # TODO Q2C
     # Testez la performance du discriminant linéaire pour le problème
@@ -223,26 +260,27 @@ if __name__ == '__main__':
     clf.fit(X, y)
     print("Score 2 Classes: ", clf.score(X, y))
     fig, sfig = plt.subplots(1, 1, sharex=True, sharey=True)
-    """
-    sfig.plot(np.array(plt.gca().get_xlim(),
-                          clf.w[0] + clf.w[1:] *
-                          np.array(plt.gca().get_xlim()),
-                          'ro-'))
-    """
-    sfig.scatter(absc, ordon, alpha=0.5, s=20,
-                 c=["bgrcmykw"[i] for i in clf.predict(
-                     np.c_[absc.ravel(), ordon.ravel()])])
-    sfig.scatter(X[:, 0], X[:, 1], c=["bgrcmykw"[i] for i in y])
-    sfig.plot()
+
+    colors = ["bgr"[i] for i in clf.predict(
+        np.c_[absc.ravel(), ordon.ravel()])]
+    # sfig.contourf(absc, ordon, colors)
+    sfig.scatter(absc, ordon, alpha=0.5, s=20, c=colors)
+    # c=["bgrcmykw"[i]
+    # for i in clf.predict(np.c_[absc.ravel(), ordon.ravel()])])
+
+    sfig.scatter(X[:, 0], X[:, 1], c=["bgr"[i] for i in y])
+    sfig.set_title("Erreur : " + str("%.2f" % round(1 - clf.score(X, y), 2)),
+                   fontsize=20)
 
     _times.append(time.time())
     checkTime(TMAX_Q2Bdisp, "2B")
     plt.show()
+    """
     _times.append(time.time())
+
     # 3 classes
     X, y = make_classification(n_features=2, n_redundant=0, n_informative=2,
                                n_clusters_per_class=1, n_classes=3)
-
     # TODO Q2C
     # Testez la performance du discriminant linéaire pour le problème
     # à  trois classes, et tracez les régions de décision
@@ -250,15 +288,16 @@ if __name__ == '__main__':
     x1 = np.linspace(X[:, 0].min(), X[:, 0].max(), pas)
     x2 = np.linspace(X[:, 1].min(), X[:, 1].max(), pas)
     absc, ordon = np.meshgrid(x1, x2)
-    clf = ClassifieurUnContreTous(n_classes=3)
+    clf = ClassifieurUnContreTous(
+        n_classes=3, method='argmax', eta=2e-2, epsilon=1e-6)
     clf.fit(X, y)
     print("Score 3 classes : ", clf.score(X, y))
 
     fig, sfig = plt.subplots(1, 1, sharex=True, sharey=True)
-
+    colors = ["bgrcmykw"[i] for i in clf.predict(
+        np.c_[absc.ravel(), ordon.ravel()])]
     sfig.scatter(absc, ordon, alpha=0.5, s=20,
-                 c=["bgrcmykw"[i] for i in clf.predict(
-                     np.c_[absc.ravel(), ordon.ravel()])])
+                 c=colors)
     sfig.scatter(X[:, 0], X[:, 1], c=["bgrcmykw"[i] for i in y])
 
     _times.append(time.time())
@@ -267,7 +306,7 @@ if __name__ == '__main__':
     plt.show()
 
     # Question 2D
-
+    """
     _times.append(time.time())
 
     # TODO Q2D
@@ -395,10 +434,10 @@ if __name__ == '__main__':
             Kuni.fit(X_train, y_train)
             Kdist.fit(X_train, y_train)
 
-            avgErrUni += 1 - Kuni.score(X_test, y_test)
-            avgErrDist += 1 - Kdist.score(X_test, y_test)
-        scoresUniformWeights.append(avgErrUni / len(X))
-        scoresDistanceWeights.append(avgErrDist / len(X))
+            avgErrUni += Kuni.score(X_test, y_test)
+            avgErrDist += Kdist.score(X_test, y_test)
+        scoresUniformWeights.append(avgErrUni / loo.get_n_splits(X))
+        scoresDistanceWeights.append(avgErrDist / loo.get_n_splits(X))
 
     _times.append(time.time())
     checkTime(TMAX_Q2Ebc, "2Ebc")
@@ -410,11 +449,10 @@ if __name__ == '__main__':
     fig, sfig = plt.subplots(1, 1, sharex=True, sharey=True)
     sfig.scatter(K, scoresUniformWeights, alpha=0.8, s=10)
     sfig.plot(K, scoresUniformWeights)
-    sfig.scatter(K, scoresDistanceWeights)
+    sfig.scatter(K, scoresDistanceWeights, alpha=0.8, s=10)
     sfig.plot(K, scoresDistanceWeights)
     sfig.set_xlabel("K")
     sfig.set_ylabel("Score")
-    sfig.set_title("Plop", fontsize=20)
     fig.legend(("Uniform", "Distance"),
                loc="lower center", ncol=2, fontsize=20)
 
@@ -457,10 +495,10 @@ if __name__ == '__main__':
             Kuni.fit(X_train, y_train)
             Kdist.fit(X_train, y_train)
 
-            avgErrUni += 1 - Kuni.score(X_test, y_test)
-            avgErrDist += 1 - Kdist.score(X_test, y_test)
-        scoresUniformWeights.append(avgErrUni / len(X))
-        scoresDistanceWeights.append(avgErrDist / len(X))
+            avgErrUni += Kuni.score(X_test, y_test)
+            avgErrDist += Kdist.score(X_test, y_test)
+        scoresUniformWeights.append(avgErrUni / loo.get_n_splits(X))
+        scoresDistanceWeights.append(avgErrDist / loo.get_n_splits(X))
 
     _times.append(time.time())
     checkTime(TMAX_Q2Eiris, "2Eiris")
@@ -470,15 +508,15 @@ if __name__ == '__main__':
     # et l'autre pour weights=distance. L'axe x de la figure doit être le
     # nombre de voisins et l'axe y la performance en leave-one-out
     fig, sfig = plt.subplots(1, 1, sharex=True, sharey=True)
-    sfig.scatter(K, scoresUniformWeights, alpha=0.8, s=10)
+    sfig.scatter(K, scoresUniformWeights, alpha=0.8, s=5)
     sfig.plot(K, scoresUniformWeights)
-    sfig.scatter(K, scoresDistanceWeights)
+    sfig.scatter(K, scoresDistanceWeights, alpha=0.8, s=5)
     sfig.plot(K, scoresDistanceWeights)
-    sfig.set_xlabel("K")
-    sfig.set_ylabel("Score")
-    sfig.set_title("Plop", fontsize=20)
+    sfig.set_xlabel("K", fontsize=20)
+    sfig.set_ylabel("Score", fontsize=20)
     fig.legend(("Uniform", "Distance"),
                loc="lower center", ncol=2, fontsize=20)
     plt.show()
 
     # N'écrivez pas de code à  partir de cet endroit
+    """
