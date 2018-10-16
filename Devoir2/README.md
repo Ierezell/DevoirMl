@@ -1,5 +1,5 @@
-# Homework Machine Learning 1
-[Link to Latex Pdf](https://www.overleaf.com/read/gzfxnccnmxxz)
+# Homework Machine Learning 2
+[Link to Latex Pdf](https://www.overleaf.com/read/zgkmkjnxhwxm)
 
 To launch the **code :**
 
@@ -7,16 +7,20 @@ Copy the repository :
 ```
 $ git clone https://github.com/Ierezell/DevoirMl
 ```
-Or download the [**ZipFile**](https://github.com/Ierezell/DevoirMl/archive/master.zip)
-
-then execute
-[File for question 2](https://github.com/Ierezell/DevoirMl/blob/master/Devoir1_Q3_Pierre_Snell.py)
+Or download the [**ZipFile**](https://github.com/Ierezell/DevoirMl/archive/master.zip) and unzip it.
+Then
 ```
-$ python Devoir1_Q2_Pierre_Snell.py
+$ cd DevoirMl/Devoir2
+```
+
+Then execute
+[File for question 2](https://github.com/Ierezell/DevoirMl/blob/master/Devoir2/Devoir2_Q1_Pierre_Snell.py)
+```
+$ python Devoir2_Q1_Pierre_Snell.py
 ```
 &
 
-[File for question 3](https://github.com/Ierezell/DevoirMl/blob/master/Devoir1_Q2_Pierre_Snell.py)
+[File for question 3](https://github.com/Ierezell/DevoirMl/blob/master/Devoir2/Devoir2_Q2_Pierre_Snell.py)
 ```
-$ python Devoir1_Q2_Pierre_Snell.py
+$ python Devoir2_Q2_Pierre_Snell.py
 ```
