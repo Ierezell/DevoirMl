@@ -162,7 +162,7 @@ class DiscriminantLineaire:
             # bonnes performances et ne se coince pas dans un minimum local
             # Le critère est totalement arbitraire mais a apporté de bons
             # résultats.
-            if (Err_prec - Err) < self.epsilon and Err < 0.001:
+            if (Err_prec - Err) < self.epsilon and Err < 0.1:
                 print("Les poids ont convergés en : ", i,
                       " itérations au lieu de", self.max_iter)
                 break
@@ -448,7 +448,7 @@ if __name__ == '__main__':
     absc, ordon = np.meshgrid(x1, x2)
 
     clf = ClassifieurUnContreTous(
-        n_classes=3, method='argmax', eta=2e-2, epsilon=1e-8)
+        n_classes=3, method='posval', eta=2e-2, epsilon=1e-8)
     clf.fit(X, y)
     print("Score 3 classes : ", clf.score(X, y))
 
@@ -505,8 +505,8 @@ if __name__ == '__main__':
             clfs[i].fit(X_train, y_train)
             avgErrorTrain += 1 - clfs[i].score(X_train, y_train)
             avgErrorTest += 1 - clfs[i].score(X_test, y_test)
-        ErrorsTest[i] = avgErrorTest / 3
-        ErrorsTrain[i] = avgErrorTrain / 3
+        ErrorsTest[i] = avgErrorTest / kf.get_n_splits(X)
+        ErrorsTrain[i] = avgErrorTrain / kf.get_n_splits(X)
 
     print("\nErreurs cancer Train (Own, Linear, Perceptron, Logistic) :\n",
           ErrorsTrain)
@@ -559,8 +559,8 @@ if __name__ == '__main__':
 
             avgErrorTrain += 1 - clfs[i].score(X_train, y_train)
             avgErrorTest += 1 - clfs[i].score(X_test, y_test)
-        ErrorsTest[i] = avgErrorTest / 3
-        ErrorsTrain[i] = avgErrorTrain / 3
+        ErrorsTest[i] = avgErrorTest / kf.get_n_splits(X)
+        ErrorsTrain[i] = avgErrorTrain / kf.get_n_splits(X)
 
     print("\nErreurs Iris Train (Own, Linear, Perceptron, Logistic) :\n",
           ErrorsTrain)
@@ -597,8 +597,6 @@ if __name__ == '__main__':
     K = [1, 3, 5, 7, 11, 13, 15, 25, 35, 45]
     scoresUniformWeights = []
     scoresDistanceWeights = []
-    avgErrUni = 0
-    avgErrDist = 0
     loo = LeaveOneOut()
 
     KnnUni = map(lambda k: KNeighborsClassifier(n_neighbors=k,
@@ -607,6 +605,8 @@ if __name__ == '__main__':
                                                  weights='distance'), K)
 
     for Kuni, Kdist in zip(list(KnnUni), list(KnnDist)):
+        avgErrUni = 0
+        avgErrDist = 0
         for train_index, test_index in loo.split(X):
             X_train, X_test = X[train_index], X[test_index]
             y_train, y_test = y[train_index], y[test_index]
@@ -631,10 +631,11 @@ if __name__ == '__main__':
     sfig.plot(K, scoresUniformWeights)
     sfig.scatter(K, scoresDistanceWeights, alpha=0.8, s=10)
     sfig.plot(K, scoresDistanceWeights)
-    sfig.set_xlabel("K")
-    sfig.set_ylabel("Erreur")
+    sfig.set_xlabel("K", fontsize=20)
+    sfig.set_ylabel("Erreur", fontsize=20)
     fig.legend(("Uniform", "Distance"),
                loc="lower center", ncol=2, fontsize=20)
+    fig.suptitle("Cancer", fontsize=20)
 
     plt.show()
 
@@ -665,8 +666,7 @@ if __name__ == '__main__':
     K = [1, 3, 5, 7, 11, 13, 15, 25, 35, 45]
     scoresUniformWeights = []
     scoresDistanceWeights = []
-    avgErrUni = 0
-    avgErrDist = 0
+
     loo = LeaveOneOut()
 
     KnnUni = map(lambda k: KNeighborsClassifier(n_neighbors=k,
@@ -675,6 +675,8 @@ if __name__ == '__main__':
                                                  weights='distance'), K)
 
     for Kuni, Kdist in zip(list(KnnUni), list(KnnDist)):
+        avgErrUni = 0
+        avgErrDist = 0
         for train_index, test_index in loo.split(X):
             X_train, X_test = X[train_index], X[test_index]
             y_train, y_test = y[train_index], y[test_index]
@@ -703,6 +705,7 @@ if __name__ == '__main__':
     sfig.set_ylabel("Error", fontsize=20)
     fig.legend(("Uniform", "Distance"),
                loc="lower center", ncol=2, fontsize=20)
+    fig.suptitle("Iris", fontsize=20)
     plt.show()
 
     # N'écrivez pas de code à  partir de cet endroit
