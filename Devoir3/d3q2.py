@@ -13,10 +13,10 @@
 # - Vous ne pouvez PAS changer la structure du code, importer d'autres
 #       modules / sous-modules, ou ajouter d'autres fichiers Python
 # - Ne touchez pas aux variables, TMAX*, ERRMAX* et _times, Ã  la fonction
-#       checkTime, ni aux conditions vÃ©rifiant le bon fonctionnement de votre 
-#       code. Ces structures vous permettent de savoir rapidement si vous ne 
-#       respectez pas les requis minimum pour une question en particulier. 
-#       Toute sous-question n'atteignant pas ces minimums se verra attribuer 
+#       checkTime, ni aux conditions vÃ©rifiant le bon fonctionnement de votre
+#       code. Ces structures vous permettent de savoir rapidement si vous ne
+#       respectez pas les requis minimum pour une question en particulier.
+#       Toute sous-question n'atteignant pas ces minimums se verra attribuer
 #       la note de zÃ©ro (0) pour la partie implÃ©mentation!
 #
 ###############################################################################
@@ -42,18 +42,22 @@ warnings.filterwarnings("ignore", category=ConvergenceWarning)
 
 # Fonctions utilitaires liÃ©es Ã  l'Ã©valuation
 _times = []
+
+
 def checkTime(maxduration, question):
     duration = _times[-1] - _times[-2]
     if duration > maxduration:
-        print("[ATTENTION] Votre code pour la question {0} met trop de temps Ã  s'exÃ©cuter! ".format(question)+
-            "Le temps maximum permis est de {0:.4f} secondes, mais votre code a requis {1:.4f} secondes! ".format(maxduration,duration)+
-            "Assurez-vous que vous ne faites pas d'appels bloquants (par exemple Ã  show()) dans cette boucle!") 
+        print("[ATTENTION] Votre code pour la question {0} met trop de temps Ã  s'exÃ©cuter! ".format(question) +
+              "Le temps maximum permis est de {0:.4f} secondes, mais votre code a requis {1:.4f} secondes! ".format(maxduration, duration) +
+              "Assurez-vous que vous ne faites pas d'appels bloquants (par exemple Ã  show()) dans cette boucle!")
+
 
 # DÃ©finition des durÃ©es d'exÃ©cution maximales pour chaque sous-question
 TMAX_KNN = 40
 TMAX_SVM = 200
 TMAX_PERCEPTRON = 400
 TMAX_EVAL = 80
+
 
 def fetchPendigits():
     """
@@ -80,7 +84,6 @@ def fetchPendigits():
 # Ne modifiez rien avant cette ligne!
 
 
-
 if __name__ == "__main__":
     # Question 2B
 
@@ -91,8 +94,7 @@ if __name__ == "__main__":
     # Notez finalement que fetch_openml retourne les donnÃ©es d'une maniÃ¨re
     # diffÃ©rente des fonctions load_*, assurez-vous que vous utilisez
     # correctement les donnÃ©es et qu'elles sont du bon type.
-   
-    
+
     # TODO Q2B
     # SÃ©parez le jeu de donnÃ©es Pendigits en deux sous-jeux: entraÃ®nement (5000) et
     # test (reste des donnÃ©es). Pour la suite du code, rappelez-vous que vous ne
@@ -100,14 +102,13 @@ if __name__ == "__main__":
     # d'hyper-paramÃ¨tres la plus performante. Ce jeu de test ne doit Ãªtre utilisÃ©
     # qu'Ã  la toute fin, pour rapporter les rÃ©sultats finaux en gÃ©nÃ©ralisation.
 
-
     # TODO Q2B
     # Pour chaque classifieur :
     # - k plus proches voisins,
     # - SVM Ã  noyau gaussien,
     # - Perceptron multicouche,
     # dÃ©terminez les valeurs optimales des hyper-paramÃ¨tres Ã  utiliser.
-    # Suivez les instructions de l'Ã©noncÃ© quant au nombre d'hyper-paramÃ¨tres Ã 
+    # Suivez les instructions de l'Ã©noncÃ© quant au nombre d'hyper-paramÃ¨tres Ã
     # optimiser et n'oubliez pas d'expliquer vos choix d'hyper-paramÃ¨tres
     # dans votre rapport.
     # Vous Ãªtes libres d'utiliser la mÃ©thodologie que vous souhaitez, en autant
@@ -116,21 +117,15 @@ if __name__ == "__main__":
     # Note : optimisez les hyper-paramÃ¨tres des diffÃ©rentes mÃ©thodes dans
     # l'ordre dans lequel ils sont Ã©numÃ©rÃ©s plus haut, en insÃ©rant votre code
     # d'optimisation entre les commentaires le spÃ©cifiant
-    
 
-    
     _times.append(time.time())
     # TODO Q2B
     # Optimisez ici la paramÃ©trisation du kPP
-   
 
-    
     _times.append(time.time())
     checkTime(TMAX_KNN, "K plus proches voisins")
     # TODO Q2B
     # Optimisez ici la paramÃ©trisation du SVM Ã  noyau gaussien
-   
-
 
     _times.append(time.time())
     checkTime(TMAX_SVM, "SVM")
@@ -139,19 +134,13 @@ if __name__ == "__main__":
     # Note : il se peut que vous obteniez ici des "ConvergenceWarning"
     # Ne vous en souciez pas et laissez le paramÃ¨tre max_iter Ã  sa
     # valeur suggÃ©rÃ©e dans l'Ã©noncÃ© (100)
-    
-
-
 
     _times.append(time.time())
     checkTime(TMAX_PERCEPTRON, "SVM")
-    
 
     # TODO Q2B
     # Ã‰valuez les performances des meilleures paramÃ©trisations sur le jeu de test
     # et rapportez ces performances dans le rapport
-    
-    
 
     _times.append(time.time())
     checkTime(TMAX_EVAL, "Evaluation des modÃ¨les")

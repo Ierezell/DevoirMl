@@ -13,10 +13,10 @@
 # - Vous ne pouvez PAS changer la structure du code, importer d'autres
 #       modules / sous-modules, ou ajouter d'autres fichiers Python
 # - Ne touchez pas aux variables, TMAX*, ERRMAX* et _times, Ã  la fonction
-#       checkTime, ni aux conditions vÃ©rifiant le bon fonctionnement de votre 
-#       code. Ces structures vous permettent de savoir rapidement si vous ne 
-#       respectez pas les requis minimum pour une question en particulier. 
-#       Toute sous-question n'atteignant pas ces minimums se verra attribuer 
+#       checkTime, ni aux conditions vÃ©rifiant le bon fonctionnement de votre
+#       code. Ces structures vous permettent de savoir rapidement si vous ne
+#       respectez pas les requis minimum pour une question en particulier.
+#       Toute sous-question n'atteignant pas ces minimums se verra attribuer
 #       la note de zÃ©ro (0) pour la partie implÃ©mentation!
 #
 ###############################################################################
@@ -35,12 +35,15 @@ from matplotlib import pyplot
 
 # Fonctions utilitaires liÃ©es Ã  l'Ã©valuation
 _times = []
+
+
 def checkTime(maxduration, question):
     duration = _times[-1] - _times[-2]
     if duration > maxduration:
-        print("[ATTENTION] Votre code pour la question {0} met trop de temps Ã  s'exÃ©cuter! ".format(question)+
-            "Le temps maximum permis est de {0:.4f} secondes, mais votre code a requis {1:.4f} secondes! ".format(maxduration,duration)+
-            "Assurez-vous que vous ne faites pas d'appels bloquants (par exemple Ã  show()) dans cette boucle!") 
+        print("[ATTENTION] Votre code pour la question {0} met trop de temps Ã  s'exÃ©cuter! ".format(question) +
+              "Le temps maximum permis est de {0:.4f} secondes, mais votre code a requis {1:.4f} secondes! ".format(maxduration, duration) +
+              "Assurez-vous que vous ne faites pas d'appels bloquants (par exemple Ã  show()) dans cette boucle!")
+
 
 # DÃ©finition des durÃ©es d'exÃ©cution maximales pour chaque sous-question
 TMAX_FIT = 2.0
@@ -61,7 +64,7 @@ class DiscriminantANoyau:
         # Lambda et sigma sont dÃ©finis dans l'Ã©noncÃ©.
         self.lambda_ = lambda_
         self.sigma = sigma
-    
+
     def fit(self, X, y):
         # ImplÃ©mentez la fonction d'entraÃ®nement du classifieur, selon
         # les Ã©quations que vous avez dÃ©veloppÃ©es dans votre rapport.
@@ -74,11 +77,11 @@ class DiscriminantANoyau:
         # Cette fonction sera appelÃ©e Ã  rÃ©pÃ©tition par l'optimiseur
         # de scipy, qui l'utilisera pour minimiser l'erreur et obtenir
         # un jeu de paramÃ¨tres optimal.
-       
-        def evaluateFunc(hypers):
 
+        def evaluateFunc(hypers):
+            err = sum(1-y[i]*h) + self.lambda_*sum(hyper[1:])
             return err, grad
-        
+
         # TODO Q3B
         # Initialisez alÃ©atoirement les paramÃ¨tres alpha et omega0
         # (l'optimiseur requiert un "initial guess", et nous ne pouvons pas
@@ -91,7 +94,6 @@ class DiscriminantANoyau:
         # dessus de laquelle ils ne veulent plus rien dire)? Une valeur
         # minimale? RÃ©fÃ©rez-vous Ã  la documentation de fmin_l_bfgs_b
         # pour savoir comment indiquer l'absence de bornes.
-       
 
         # Ã€ ce stade, trois choses devraient Ãªtre dÃ©finies :
         # - Une fonction d'Ã©valuation nommÃ©e evaluateFunc, capable de retourner
@@ -99,20 +101,22 @@ class DiscriminantANoyau:
         #   configuration de paramÃ¨tres alpha et omega_0 donnÃ©e.
         # - Un tableau numpy nommÃ© params de mÃªme taille que le nombre de
         #   paramÃ¨tres Ã  entraÃ®ner.
-        # - Une liste nommÃ©e bounds contenant les bornes que l'optimiseur doit 
+        # - Une liste nommÃ©e bounds contenant les bornes que l'optimiseur doit
         #   respecter pour chaque paramÃ¨tre
         # On appelle maintenant l'optimiseur avec ces informations et on stocke
         # les valeurs optimisÃ©es dans params
         _times.append(time.time())
-        params, minval, infos = fmin_l_bfgs_b(evaluateFunc, params, bounds=bounds)
+        params, minval, infos = fmin_l_bfgs_b(
+            evaluateFunc, params, bounds=bounds)
         _times.append(time.time())
         checkTime(TMAX_FIT, "Entrainement")
 
         # On affiche quelques statistiques
         print("EntraÃ®nement terminÃ© aprÃ¨s {it} itÃ©rations et "
-                "{calls} appels Ã  evaluateFunc".format(it=infos['nit'], calls=infos['funcalls']))
+              "{calls} appels Ã  evaluateFunc".format(it=infos['nit'], calls=infos['funcalls']))
         print("\tErreur minimale : {:.5f}".format(minval))
-        print("\tL'algorithme a convergÃ©" if infos['warnflag'] == 0 else "\tL'algorithme n'a PAS convergÃ©")
+        print("\tL'algorithme a convergÃ©" if infos['warnflag']
+              == 0 else "\tL'algorithme n'a PAS convergÃ©")
         print("\tGradients des paramÃ¨tres Ã  la convergence (ou Ã  l'Ã©puisement des ressources) :")
         print(infos['grad'])
 
@@ -121,12 +125,10 @@ class DiscriminantANoyau:
         # - Le vecteur alpha dans self.alphas
         # - Le biais omega0 dans self.w0
 
-
-
         # On retient Ã©galement le jeu d'entraÃ®nement, qui pourra
         # vous Ãªtre utile pour les autres fonctions Ã  implÃ©menter
         self.X, self.y = X, y
-    
+
     def predict(self, X):
         # TODO Q3B
         # ImplÃ©mentez la fonction de prÃ©diction
@@ -134,7 +136,6 @@ class DiscriminantANoyau:
         # et que les variables membres alphas, w0, X et y existent.
         # N'oubliez pas que ce classifieur doit retourner -1 ou 1
 
-    
     def score(self, X, y):
         # TODO Q3B
         # ImplÃ©mentez la fonction retournant le score (accuracy)
@@ -142,7 +143,6 @@ class DiscriminantANoyau:
         # Vous pouvez supposer que fit() a prÃ©alablement Ã©tÃ© exÃ©cutÃ©
         # Indice : rÃ©utiliser votre implÃ©mentation de predict() rÃ©duit de
         # beaucoup la taille de cette fonction!
-
 
 
 if __name__ == "__main__":
@@ -154,19 +154,16 @@ if __name__ == "__main__":
     # N'oubliez pas de vous assurer que les valeurs possibles de y sont
     # bel et bien -1 et 1, et non 0 et 1!
 
-    
     # TODO Q3B
     # SÃ©parez le jeu de donnÃ©es en deux parts Ã©gales, l'une pour l'entraÃ®nement
     # et l'autre pour le test
-    
+
     _times.append(time.time())
     # TODO Q3B
     # Une fois les paramÃ¨tres lambda et sigma de votre classifieur optimisÃ©s,
     # crÃ©ez une instance de ce classifieur en utilisant ces paramÃ¨tres optimaux,
     # et calculez sa performance sur le jeu de test.
 
-
-    
     # TODO Q3B
     # CrÃ©ez ici une grille permettant d'afficher les rÃ©gions de
     # dÃ©cision pour chaque classifieur
@@ -174,10 +171,6 @@ if __name__ == "__main__":
     # Par la suite, affichez les rÃ©gions de dÃ©cision dans la mÃªme figure
     # que les donnÃ©es de test.
     # Note : utilisez un pas de 0.02 pour le meshgrid
-   
-    
-    
-
 
     # On affiche la figure
     # _times.append(time.time())
